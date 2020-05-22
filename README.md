@@ -2,7 +2,7 @@
 
 ## Description
 
-Here you can find all the code used to display the knowledge graph (KG) in http://wiki.vericloud.fr .
+Here you can find all the code used to display the knowledge graph (KG) in https://wiki.veriqloud.fr .
 
 ## Usage
 
