@@ -6,7 +6,7 @@ Here you can find all the code used to display the knowledge graph (KG) in https
 
 ## Usage
 
-To use the code, since it's purposed to be displayed in a Wikimedia site, just be copy paste the code in the right pages if you have the rights to access them. They are not open to editing to every unknown users.
+To use the code, since it's purposed to be displayed in a Wikimedia site, just copy paste the code in the right pages if you have the rights to access them. They are not open to editing to every unknown users.
 
 The pages where the copypasta magic happens can be accessed at https://wiki.veriqloud.fr/index.php?title=MediaWiki:Common.js and https://wiki.veriqloud.fr/index.php?title=MediaWiki:Graph.js
 
