@@ -30,11 +30,11 @@ To add a protocol, resource..., take care to add its dependencies, and the depen
 
 We will explain some of the function to get an idea of how the graph is displayed. They are not needed to be understood to maintain the graph updated.
 
-* unique() : this is the first function called. It looks for a url parameter that it tries to find in the graph. If no parameters found, the data is used entirely. If not, we find the lineage of the protocol selected, and changes the zoodata so that we use only the lineage. That way we just have to match the url of an article to its corresponding node so that a writer doesn't need to go deep into the code to display the graph.
+* unique() : this is the first function called. It looks for a url parameter that it tries to find in the graph. If no parameters found, the data is used entirely. If its found, we find the lineage of the protocol selected, and changes the zoodata so that we use only the nodes found. That way we just have to match the url of an article to its corresponding node so that a writer doesn't need to go deep into the code to display the graph on a protocol page.
 
 * redrawAll() : this is the function used to draw the graph. It looks for the data, create the network with the nodes and the edges and the clickable nodes.
 
 * getDoables(selectedResources) : the main ressources function. It should perfectly shows all the ressources needed to implement every nodes in the network, with comprehensive highliting of the nodes depending of their relations. It's a recursive function that goes step by step.
 
-* rselectnode()
+* rselectnode().... to be continued
 
