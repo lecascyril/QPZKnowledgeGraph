@@ -839,7 +839,15 @@ const zooData = [
 
 ];
 
-// unique 
+////////////////////////
+// all the function used for drawing and fixing the data
+////////////////////////
+
+////////////////////////
+// first part, unique 
+////////////////////////
+
+// all the code used in this first part is used uniquely in this part, and is used to get the right data to display on every pages of the wiki zoo
 
 function getAllUrlParams(url) {
 // found on internet, works great to find parameter if needed 
@@ -879,6 +887,7 @@ function getAllUrlParams(url) {
   return obj;
 }
 
+// useless for now
 function arraysEqual(a,b) {
 
   if (a instanceof Array && b instanceof Array) {
@@ -896,6 +905,9 @@ function arraysEqual(a,b) {
 let directasc = [];
 
 function getdirectasczoo(nodeid){
+    // get all direct ascendant of an item 
+    // return an array of them
+
   for (i=0;i<zooData.length;i++){
     if (typeof zooData[i].requires  !== 'undefined') {
         if (zooData[i]['requires'].includes(nodeid)){ if (! directasc.includes(zooData[i].id)){directasc.push(zooData[i].id)}}
@@ -911,6 +923,9 @@ function getdirectasczoo(nodeid){
 }
 
 function getdirectdeszoo(nodeid){
+    // get all direct descendant of an item 
+    // return an array of them
+
   let directdes = [];
   for (i=0;i<zooData.length;i++){
     if (nodeid== zooData[i].id){
@@ -935,20 +950,24 @@ var nodesids=[];
 
 
 function getasczoo(nodeids){
+    // return an array of every ascendant of an item, including the ascendant of them recursively
   nodestest.length=0;
   bool=false;
   for (j=0;j<nodeids.length;j++){
     nodestest.push(getdirectasczoo(nodeids[j]));
   }
+  // we find the ascendant of all the nodes selected (or the unique one to start)
   nodesids=nodestest.flat();
   let uniquenodes=  [...new Set(nodesids)];
   var bool = false;
+  // we test if in this iteration all the asc are included in the array of ascendant, what would mean that the search is over
   for (i=0;i<nodeids.length;i++){
     if( !nodeids.includes(uniquenodes[i]) ){
       bool=true;
       break;
     }
   }
+  //if new elements are found, we find the ascendants again
   if (bool==true){
     return getasczoo(uniquenodes);
   } else {
@@ -957,6 +976,7 @@ function getasczoo(nodeids){
 }
 
 function getdeszoo(nodeids){
+    // we find the desc of the desc.. and return them in an array, other method
   return nodeids
   .reduce(
       (acc, cur) => { return [...acc, ...getdeszoo(getdirectdeszoo(cur))]; },
@@ -965,6 +985,7 @@ function getdeszoo(nodeids){
 }
 
 function lineagezoo(nodeid){
+    // we concatenate all the ascendant and descendant in an unique array lineage returned
 
   let lineage=[];
   let des=getdeszoo(nodeid);
@@ -978,7 +999,7 @@ function lineagezoo(nodeid){
  return lineage;
 }
 
-
+// get the url of current page
 function getProperUrl(){
   var url = window.location.toString();
   url = url.split("#")[0];
@@ -989,6 +1010,10 @@ var selected= [];
 
 
 function noParty() {
+    // we want to express the requirement of an element that is a protocol party in its parent protocol
+    // so that every protocol requires the the requirement of its party
+    // we find every protocol party, then search for their parent, and add its requirement to the parents
+    // finally delete the protocol party from the data
   for (i=0;i<zooData.length;i++){
     if(zooData[i]['category']=='protocol_party'){
         if ( typeof zooData[i]['requires']  !== 'undefined'){
@@ -1009,10 +1034,14 @@ function noParty() {
 }
 
 function unique(){
+    // we use the proper data for the page we are in
+
   if (typeof getAllUrlParams().title  !== 'undefined'){
     var titre= getAllUrlParams().title;
+    // if we are on not on the main page or the graph page, we dont need to erase anything from the data
     if (getAllUrlParams().title.length >0 && getAllUrlParams().title != "main_page" && getAllUrlParams().title != "graphs" ){
-      for (i=0;i<zooData.length;i++){
+    // we find the right item from zoo data by comparing its .uri entry to match witch the current url
+    for (i=0;i<zooData.length;i++){
         if ( typeof zooData[i].uri  !== 'undefined'){
           if (zooData[i].uri==getProperUrl()){
             selected[0]= zooData[i].id;
@@ -1020,6 +1049,8 @@ function unique(){
           }
         }
       }
+      // we then select only the lineage of this right item from the zoo
+      // by creating a new zoo from the selected id returned by the lineage function
       var toKeep= lineagezoo(selected);
       var newZoo= [];
       for (i=0; i<toKeep.length; i++){
@@ -1029,12 +1060,14 @@ function unique(){
           }
         }
       }
+      // finally we erase all zoodata and replace it by all the items found
       let unique = [...new Set(newZoo)];
       zooData.length=0;
       for(i=0;i<unique.length;i++){
         zooData.push(unique[i]);
       }
     }
+    // if we are in these pages we erase the protocol party to show uniquely the graph without complexing it with all the protocol party
     else {noParty();}
   }
   else {noParty();}
@@ -1044,10 +1077,15 @@ let allNodes;
 let allEdges;
 
 // transformation data for protocol_party and graphs in pages
+// first function called
 
 unique();
 
-// loading data
+////////////////////////
+// second part, loading data and displaying data
+////////////////////////
+
+// creating the nodes and the edges
 const nodes = zooData.map(n => {
     return {
         id: n.id,
@@ -1067,6 +1105,7 @@ const nodes = zooData.map(n => {
     };
 });
 
+// we can change parameters of the edges like their colors
 const edges = zooData.reduce(
     (edges, node) => {
         if (node.implemented_by) { edges.push(...node.implemented_by.map(r => { return { from: node.id, to: r, arrows: "to", color:  {inherit:'from'}, /*label: "IMPLEMENTED_BY"*/ }; })); }
@@ -1085,7 +1124,10 @@ const edgesDataset = new vis.DataSet(edges);
 var which= true;
 var textbutton="";
 
+
 function buttonclicked(){
+    // function called on onclick on the button element displayed in the graph page
+    // empty the graph, redrawing it and changing the button text
     if (which == true){
         which=false;
         document.getElementById("button").innerHTML="Switch to Lineage graph";
@@ -1104,6 +1146,7 @@ var network= null;
 
 
 function redrawAll() {
+    // function used to draw the graph from all the parameters expressed before
     var container = document.getElementById('mynetwork');
     var options = {
         nodes: {
@@ -1150,17 +1193,23 @@ function redrawAll() {
 }
 
 function visitWikiNode(params) {
+    // onclick on an item of the graph to redirect on its uri
     const selectedNodeId = params.nodes[0];
     const selectedNode = allNodes[selectedNodeId];
     if (selectedNode.uri) { window.open(selectedNode.uri, '_blank'); }
 } 
 
+////////////////////////
+// third part : get the right interactions when clicking nodes
+////////////////////////
 
 // resources
 
 let selectedResources = [];
 
 const Rhighlight = (nodeIds, nodeIds2) => {
+    //coloring the nodes the right way so that the highliting looks right
+    // its a contextual fix of the normal behaviour of the library
     for (let nodeId in allNodes) {
         if (nodeIds2.includes(nodeId)){ allNodes[nodeId].color = 'rgba(50, 126, 130,0.5)';}
         else if (nodeIds.includes(nodeId) || nodeIds.length === 0) { allNodes[nodeId].color = undefined; }        
@@ -1170,7 +1219,7 @@ const Rhighlight = (nodeIds, nodeIds2) => {
 
 
 const getDoables = (selectedResources) => {
-
+    // finding all the right ressources doable with the ressource selected, and its children, recursively
     const RgetDirectDesc = (nodeId) => {
         const desc = edges
             .filter(rec => { return rec.from === nodeId ; })
@@ -1239,12 +1288,14 @@ const getDoables = (selectedResources) => {
 };
 
 function emptyR(){
+    // empty the list of selected node
     selectNode({nodes:[]});
 }
 
 
 function RselectNode(params) {
-
+    // getting the right selection of nodes (that will be correctly highlighted) 
+    // fixing the normal behaviour of the library
    
     var booltest= false;
     if (params.nodes[0]) {
@@ -1262,7 +1313,7 @@ function RselectNode(params) {
     
 
   
-
+    // we find the fathers of every item which is a subtype that is include in the selected resources
     let father = [];
     for (var i=0; i<zooData.length;i++){
         if ( typeof zooData[i].has_subtype  !== 'undefined'){
@@ -1274,9 +1325,13 @@ function RselectNode(params) {
         }
     }
 
+    // we add them to the selection, and re run again the resources function, to get their doables
     let selection= selectedResources.concat(father);
     const impliedDoables = getDoables(selection);
 
+
+    // then we search in the zoodata the items that has a subtype, then compare them to the selected item
+    // then their sons are selected and added to an array of items that will be highlighted differently
     let fathers=[];
     for (i=0;i<zooData.length;i++){
         if ( typeof zooData[i].has_subtype  !== 'undefined'){
@@ -1303,12 +1358,14 @@ function RselectNode(params) {
         }
     }
 
+    // we highlight the selected items and their subtype
     Rhighlight(impliedDoables,highlightsub);
 
     let updateArray = [];
     for (let nodeId in allNodes) {
         if (allNodes.hasOwnProperty(nodeId)) { updateArray.push(allNodes[nodeId]); }
     }
+    // we update the dataset
     nodesDataset.update(updateArray);
 }
 
@@ -1316,6 +1373,7 @@ function RselectNode(params) {
 
 
 const highlight = (nodeIds, nodeIds2) => {
+    //parameters of highlighting
     for (let nodeId in allNodes) {
         if (nodeIds2.includes(nodeId)){ allNodes[nodeId].color = 'rgba(50, 126, 130,0.5)';}
         else if (nodeIds.includes(nodeId) || nodeIds.length === 0) { allNodes[nodeId].color = undefined; allNodes[nodeId].label = allNodes[nodeId].hiddenLabel || allNodes[nodeId].label; }
@@ -1327,6 +1385,7 @@ const highlight = (nodeIds, nodeIds2) => {
 
 
 function edgesfix(nodesids){
+    // fixing the display ot the edges so that  the colors match their "from" node
     if (nodesids.length!==0){
         for (i=0;i<edges.length;i++){
             for (j=0;j<nodesids.length;j++){
@@ -1347,16 +1406,18 @@ function edgesfix(nodesids){
     }
 }
 
+// boolean that calls the the resources or the lineage graph
 var which= true;
 var textbutton="";
 
-
-
+//useless, this function is directly in the "display the graph" part
 function trace(){
     if (which==true){ selectNode;}
     else { RselectNode;}
 }
 
+
+// get the selected lineage
 const selectLineage = (params) => {
     const selectedNodeId = params.nodes[0];
 
@@ -1398,11 +1459,12 @@ const selectLineage = (params) => {
 
 
 function emptyL(){
+    //empty the selection of nodes
     selectNode({nodes:[]});
 }
 
 function sons(params){
-
+// same as in the ressources, all the subtypes are selected
     const selectedNodeId = params.nodes[0];
     var sons= [];
     var x = [];
@@ -1437,6 +1499,7 @@ function sons(params){
 
 
 function selectNode(params) {
+    // function called on click if this is the lineage graph selected
 
     const lineage = selectLineage(params);
     
@@ -1455,6 +1518,7 @@ function selectNode(params) {
         if (allEdges.hasOwnProperty(edge)) { updateEdge.push(allEdges[edge]); }
     }
 
+    // we update the dataset, and the edgesset because of the edgesfix
     nodesDataset.update(updateArray);
     edgesDataset.update(edges);
 
@@ -1462,9 +1526,16 @@ function selectNode(params) {
 }
 redrawAll();
 
+///////////////////
+// final part: animation
+///////////////////
+
+
+// if we are in the knowledge graph page, the graph start by an animation
 if (document.getElementById('biggraph')){
 setTimeout(showAnimation,100);
 
+// the animation is divided in two part, the focus on a random item, then returning on a larger view
 function showAnimation() {
     focusOnOne();
     setTimeout(notFocus,1500);
@@ -1472,6 +1543,7 @@ function showAnimation() {
 
 
 function focusOnOne() {
+    // the focus is made on a random node with all the options above
     var alea= Math.floor(Math.random() * 87);
     var nodeId=network["body"]["nodeIndices"][alea];
     var options = {
@@ -1486,7 +1558,9 @@ function focusOnOne() {
 }
 
 function notFocus() {
-    var nodeId ="q_coin";
+    // the larger view is made from a selected node with all the options above
+    var nodeId ="q_coin"; 
+    // the node "from the middle" needs to be changed to suit the datas if the layout change
     var options = {
         scale: 0.1,
         offset: {x:0,y:0},
